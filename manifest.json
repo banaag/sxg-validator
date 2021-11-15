@@ -1,0 +1,37 @@
+{
+  "manifest_version": 2,
+  "name": "__MSG_extensionName__",
+  "version": "1.2.0",
+  "default_locale": "en",
+  "description": "__MSG_extensionDescription__",
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  },
+  "browser_action": {
+    "default_icon": {
+      "19": "Web_Packager_gradient_a_1x.png",
+      "38": "Web_Packager_gradient_a_3x.png"
+    },
+    "default_popup": "dialog.html"
+  },
+  "background": {
+    "page": "background.html"
+  },
+  "content_scripts": [
+    {
+      "js": ["content_script.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "content_security_policy": "script-src 'self' https://cdn.ampproject.org 'wasm-eval'; object-src 'self'",
+  "homepage_url": "https://signed-exchange-testing.dev",
+  "permissions": [
+    "tabs",
+    "webRequest",
+    "webRequestBlocking",
+    "*://*/",
+    "<all_urls>"
+  ]
+}
