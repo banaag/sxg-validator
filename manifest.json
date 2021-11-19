@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "__MSG_extensionName__",
-  "version": "1.2.0",
+  "version": "1.0",
   "default_locale": "en",
   "description": "__MSG_extensionDescription__",
   "icons": {
@@ -25,13 +25,10 @@
       "matches": ["<all_urls>"]
     }
   ],
-  "content_security_policy": "script-src 'self' https://cdn.ampproject.org 'wasm-eval'; object-src 'self'",
-  "homepage_url": "https://signed-exchange-testing.dev",
+  "content_security_policy": "script-src 'self'; object-src 'self'",
+  "homepage_url": "https://developers.google.com/search/docs/advanced/experience/signed-exchange",
   "permissions": [
     "tabs",
-    "webRequest",
-    "webRequestBlocking",
-    "*://*/",
     "<all_urls>"
   ]
 }
