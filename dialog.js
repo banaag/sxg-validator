@@ -1,3 +1,19 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /**
  * Constructs a human readable curls encoded proxy domain using the following
  * algorithm:
@@ -17,106 +33,89 @@ function constructHumanReadableCurlsProxyDomain_(domain) {
   return toAscii(domain);
 }
 
-/**
- * Parses the url into separate URL components.
- * @param {string} url 
- * @returns {object} An object containing parsed out URL components.
- */
-function parseUrl(url) {
-  var elem = document.createElement('a');
-  elem.href = url;
-  return {
-    protocol: elem.protocol,
-    host:     elem.host,
-    hostname: elem.hostname,
-    port:     elem.port,
-    pathname: elem.pathname,
-    hash:     elem.hash
-  };
-}
-
 function getCertUrl(result) {
   const resultArray = result.split(';');
   if (resultArray.length >= 3) {
-    var pair = resultArray[2].split('=');
-    if (pair.length >= 2) {
-      return pair[1];
+    for (let i = 0; i < resultArray.length; i++) {
+      var pair = resultArray[2].split('=');
+      if (pair[0] != 'cert-url') {
+        continue;
+      }
+      if (pair.length >= 2) {
+        return pair[1];
+      }
     }
   }
   return null;
 }
 
-function setCertDisplayFields(result) {
-  var correctContentType = result.headers.get('Content-Type') ==
-      'application/cert-chain+cbor';
-  document.getElementById('certurl').textContent = result.url;
-  document.getElementById('certcontenttype').textContent =
-      result.headers.get('Content-Type');
-  document.getElementById('certwarning').textContent = 
-    result.headers.get('Warning');
-  document.getElementById('certlocation').textContent =
-    result.headers.get('Location');
+async function setCertDisplayFields(result) {
+  const contentType = result.headers.get('Content-Type');
+  const warning = result.headers.get('Warning');
+  const location = result.headers.get('Location');
 
-  let ret = result.arrayBuffer().then(function(buffer) {
-    var enc = new TextDecoder("utf-8");
-    var s = enc.decode(buffer);
-    if (correctContentType) {
-      if (result.headers.get('Warning') == null &&
-          result.headers.get('Location') != null) {
-        document.getElementById('certimg').innerHTML = "⌛";
-      } else {
-        document.getElementById('certimg').innerHTML = "✅";
-      }
+  var correctContentType = contentType == 'application/cert-chain+cbor';
+  document.getElementById('certurl').textContent = result.url;
+  document.getElementById('certcontenttype').textContent = contentType;
+  document.getElementById('certwarning').textContent = warning;
+  document.getElementById('certlocation').textContent = location;
+
+  let buffer = await result.arrayBuffer();
+  var enc = new TextDecoder("utf-8");
+  var s = enc.decode(buffer);
+  if (correctContentType) {
+    if (warning == null && location != null) {
+      document.getElementById('certimg').innerHTML = "⌛";
     } else {
-      document.getElementById('certimg').innerHTML = "❌";
+      document.getElementById('certimg').innerHTML = "✅";
     }
-  });
+  } else {
+    document.getElementById('certimg').innerHTML = "❌";
+  }
 }
 
-function setDisplayFields(result, urlFieldId, contentTypeFieldId, imgFieldId) {
-  var correctContentType = result.headers.get('Content-Type') ==
-      'application/signed-exchange;v=b3';
+async function setDisplayFields(result, urlFieldId, contentTypeFieldId,
+                                imgFieldId) {
+  const contentType = result.headers.get('Content-Type');
+  const warning = result.headers.get('Warning');
+  const location = result.headers.get('Location');
+
+  var correctContentType = contentType == 'application/signed-exchange;v=b3';
   document.getElementById(urlFieldId).textContent = result.url;
-  document.getElementById(contentTypeFieldId).textContent =
-      result.headers.get('Content-Type');
+  document.getElementById(contentTypeFieldId).textContent = contentType;
   if (urlFieldId === "cacheurl") {
-    document.getElementById('cachewarning').textContent = 
-      result.headers.get('Warning');
-    document.getElementById('cachelocation').textContent =
-      result.headers.get('Location');
+    document.getElementById('cachewarning').textContent = warning;
+    document.getElementById('cachelocation').textContent = location;
   }
 
-  let ret = result.arrayBuffer().then(function(buffer) {
-    var enc = new TextDecoder("utf-8");
-    var s = enc.decode(buffer);
-    if (correctContentType && s.startsWith('sxg1-b3\0')) {
-      if (result.headers.get('Warning') == null &&
-          result.headers.get('Location') != null) {
-        document.getElementById(imgFieldId).innerHTML = "⌛";
-      } else {
-        document.getElementById(imgFieldId).innerHTML = "✅";
-      }
+  let buffer = await result.arrayBuffer();
+  var enc = new TextDecoder("utf-8");
+  var s = enc.decode(buffer);
+  if (correctContentType && s.startsWith('sxg1-b3\0')) {
+    if (warning == null && location != null) {
+      document.getElementById(imgFieldId).innerHTML = "⌛";
     } else {
-      document.getElementById(imgFieldId).innerHTML = "❌";
+      document.getElementById(imgFieldId).innerHTML = "✅";
     }
-    return getCertUrl(s);
-  });
+  } else {
+    document.getElementById(imgFieldId).innerHTML = "❌";
+  }
+  let certUrl = getCertUrl(s);
 
-  ret.then(certUrl => {
-    fetch(certUrl.slice(1, -1), {
+  if (certUrl) {
+    let certResult = await fetch(certUrl.slice(1, -1), {
       method: "GET",
       headers: { 
         "Accept": "application/cert-chain+cbor",
-      }
-    }).then(result => {
-      setCertDisplayFields(result);
-    })
-  });
+      }});
+
+    setCertDisplayFields(certResult);
+  }
 }
 
 // Update the relevant fields with the new data.
-const setDOMInfo = info => {
-    fetch(info.url, {
+function setDOMInfo(url) {
+    fetch(url, {
       method: "GET",
       headers: {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"}
@@ -124,7 +123,7 @@ const setDOMInfo = info => {
       setDisplayFields(result, 'url', 'contenttype', 'originimg');
     })
 
-    var urlObject = parseUrl(info.url);
+    const urlObject = new URL(url);
     cacheUrl = 'https://' 
       + constructHumanReadableCurlsProxyDomain_(urlObject.host) 
       + '.webpkgcache.com/doc/-/s/'
@@ -148,12 +147,6 @@ window.addEventListener('DOMContentLoaded', () => {
     active: true,
     currentWindow: true
   }, tabs => {
-    // Send a request for the DOM info.
-    chrome.tabs.sendMessage(
-        tabs[0].id,
-        {from: 'popup', subject: 'DOMInfo'},
-        // Specify a callback to be called 
-        // from the receiving end (content script).
-        setDOMInfo);
+    setDOMInfo(tabs[0].url);
   });
 });
