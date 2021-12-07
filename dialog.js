@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+goog.require('punycode');
+goog.require('goog.crypt');
+goog.require('goog.crypt.Sha256');
+goog.require('goog.crypt.baseN');
+goog.require('goog.i18n.bidi');
+
 /**
  * Constructs a human readable curls encoded proxy domain using the following
  * algorithm:
@@ -27,10 +33,138 @@
  * @private
  */
 function constructHumanReadableCurlsProxyDomain_(domain) {
-  domain = toUnicode(domain.toLowerCase());
+  domain = punycode.toUnicode(domain.toLowerCase());
   domain = domain.split('-').join('--');
   domain = domain.split('.').join('-');
-  return toAscii(domain);
+  return punycode.toAscii(domain);
+}
+
+/**
+ * Constructs a curls domain following instructions at go/amp-curls-domains
+ * @param {string} domain The publisher domain
+ * @return {string} The curls encoded domain
+ */
+ function constructPerPublisherProxyAuthority(domain) {
+  var curlsEncoding = isEligibleForHumanReadableProxyEncoding_(domain) ?
+      constructHumanReadableCurlsProxyDomain_(domain) :
+      constructFallbackCurlsProxyDomain_(domain);
+  const MAX_DOMAIN_LABEL_LENGTH = 63;
+  // The length of the encoded string cannot exceed 63 characters
+  if (curlsEncoding.length > MAX_DOMAIN_LABEL_LENGTH) {
+    curlsEncoding = constructFallbackCurlsProxyDomain_(domain);
+  }
+  // Check for violations of RFC 5891
+  // https://tools.ietf.org/html/rfc5891#section-4.2.3.1
+  // Punycode library will generate such URLs even though they are invalid
+  // and can cause Safari to hang: b/113606898
+  if (this.hasInvalidHyphen34_(curlsEncoding)) {
+    curlsEncoding = constructCurlsProxyDomainForHyphen34_(curlsEncoding);
+  }
+  return curlsEncoding;
+}
+
+/**
+ * Determines whether the given domain can be validly encoded into a human
+ * readable curls encoded proxy domain.  A domain is eligible as long as:
+ *   It does not have hyphens in positions 3&4.
+ *   It does not exceed 63 characters
+ *   It does not contain a mix of right-to-left and left-to-right characters
+ *   It contains a dot character
+ *
+ * @param {string} domain The domain to validate
+ * @return {boolean}
+ * @private
+ */
+function isEligibleForHumanReadableProxyEncoding_(domain) {
+  if (hasInvalidHyphen34_(domain)) {
+    return false;
+  }
+  var unicode = punycode.toUnicode(domain);
+  const MAX_DOMAIN_LABEL_LENGTH = 63;
+  return domain.length <= MAX_DOMAIN_LABEL_LENGTH &&
+      !(goog.i18n.bidi.hasAnyLtr(unicode) &&
+        goog.i18n.bidi.hasAnyRtl(unicode)) &&
+      domain.indexOf('.') != -1;
+}
+
+/**
+ * Determines if a domain or curls encoded proxy domain is allowed to have a
+ * hyphen in positions 3&4.
+ *
+ * @param {string} domainOrCurls A publisher domain or curls encoded proxy
+ *   domain
+ * @return {boolean}
+ * @private
+ */
+function hasInvalidHyphen34_(domainOrCurls) {
+  return domainOrCurls.slice(2, 4) == '--' &&
+      domainOrCurls.slice(0, 2) != 'xn';
+}
+
+/**
+ * Constructs a fallback curls encoded proxy domain by taking the SHA256 of
+ * the domain and base32 encoding it.
+ *
+ * @param {string} domain The publisher domain
+ * @return {string} The curls encoded domain
+ * @private
+ */
+function constructFallbackCurlsProxyDomain_(domain) {
+  var sha256 = new goog.crypt.Sha256();
+  sha256.update(domain, domain.length);
+  var hexString = goog.crypt.byteArrayToHex(sha256.digest());
+  return this.base32Encode_(hexString);
+}
+
+/**
+ * Constructs a human readable curls for when the constructed curls has a
+ * hyphen in position 3&4.
+ *
+ * @param {string} curlsEncoding The curls encoded domain with hyphen in
+ *   position 3&4
+ * @return {string} The transformed curls encoded domain
+ * @private
+ */
+function constructCurlsProxyDomainForHyphen34_(curlsEncoding) {
+  var prefix = '0-';
+  return prefix.concat(curlsEncoding, '-0');
+}
+
+/**
+ * Encodes a hex string in base 32 according to specs in RFC 4648 section 6.
+ * Unfortunately, our only conversion tool is baseN.recodeString which
+ * converts a string from base16 to base32 numerically, trimming off leading
+ * 0's in the process. We use baseN to perform a base32 encoding as follows:
+ *   Start with 256 bit sha encoded as a 64 char hex string
+ *   Append 24 bits (6 hex chars) for a total of 280, exactly 7 40-bit chunks
+ *   Prepend a 40-bit block of 1's (10 'f' chars) so that basen doesn't trim
+ *     the beginning when converting
+ *   Call basen
+ *   Trim the first 8 chars (the 40 1's)
+ *   Trim the last 4 chars
+ *
+ * @param {string} hexString The hex string
+ * @return {string} The base32 encoded string
+ * @private
+ */
+function base32Encode_(hexString) {
+  var initialPadding = 'ffffffffff';
+  var finalPadding = '000000';
+  var paddedString = initialPadding + hexString + finalPadding;
+  var base16 = goog.crypt.baseN.BASE_LOWERCASE_HEXADECIMAL;
+  // We use the base32 character encoding defined here:
+  // https://tools.ietf.org/html/rfc4648
+  var base32 = 'abcdefghijklmnopqrstuvwxyz234567';
+  var recodedString =
+      goog.crypt.baseN.recodeString(paddedString, base16, base32);
+
+  var bitsPerHexChar = 4;
+  var bitsPerBase32Char = 5;
+  var numInitialPaddingChars =
+      initialPadding.length * bitsPerHexChar / bitsPerBase32Char;
+  var numHexStringChars =
+      Math.ceil(hexString.length * bitsPerHexChar / bitsPerBase32Char);
+  return recodedString.substr(numInitialPaddingChars, numHexStringChars);
 }
 
 function getCertUrl(result) {
@@ -115,30 +249,35 @@ async function setDisplayFields(result, urlFieldId, contentTypeFieldId,
 
 // Update the relevant fields with the new data.
 function setDOMInfo(url) {
-    fetch(url, {
-      method: "GET",
-      headers: {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"}
-    }).then(result => {
-      setDisplayFields(result, 'url', 'contenttype', 'originimg');
-    })
+  fetch(url, {
+    method: "GET",
+    headers: {
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9"}
+  }).then(result => {
+    setDisplayFields(result, 'url', 'contenttype', 'originimg');
+  })
+  .catch((error) => {
+    console.log(error)
+  });
 
-    const urlObject = new URL(url);
-    cacheUrl = 'https://' 
-      + constructHumanReadableCurlsProxyDomain_(urlObject.host) 
-      + '.webpkgcache.com/doc/-/s/'
-      + urlObject.host
-      + urlObject.pathname;
+  const urlObject = new URL(url);
+  cacheUrl = 'https://' 
+    + constructPerPublisherProxyAuthority(urlObject.host) 
+    + '.webpkgcache.com/doc/-/s/'
+    + urlObject.host
+    + urlObject.pathname;
 
-    var certUrl;
-    fetch(cacheUrl, {
-      method: "GET",
-      headers: { 
-        "Accept": "application/signed-exchange;v=b3",
-      }
-    }).then(result => {
-      setDisplayFields(result, 'cacheurl', 'cachecontenttype', 'cacheimg');
-    });
+  fetch(cacheUrl, {
+    method: "GET",
+    headers: { 
+      "Accept": "application/signed-exchange;v=b3",
+    }
+  }).then(result => {
+    setDisplayFields(result, 'cacheurl', 'cachecontenttype', 'cacheimg');
+  })
+  .catch((error) => {
+    console.log(error)
+  });
 };
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -150,3 +289,4 @@ window.addEventListener('DOMContentLoaded', () => {
     setDOMInfo(tabs[0].url);
   });
 });
+

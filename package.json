@@ -1,0 +1,27 @@
+{
+  "name": "sxg_validator",
+  "version": "1.0.0",
+  "description": "This is the source code to the publicly available [SXG Validator](https://chrome.google.com/webstore/) Chrome extension.",
+  "main": "content_script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/banaag/sxg-validator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/banaag/sxg-validator/issues"
+  },
+  "homepage": "https://github.com/banaag/sxg-validator#readme",
+  "dependencies": {
+    "google-closure-library": "^20211107.0.0"
+  },
+  "devDependencies": {
+    "google-closure-compiler": "^20211107.0.0",
+    "google-closure-deps": "^20211107.0.0"
+  }
+}

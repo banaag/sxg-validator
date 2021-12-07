@@ -23,6 +23,9 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+ goog.module('punycode');
+ goog.module.declareLegacyNamespace();
+
  const floor = Math.floor;
  
  // Bootstring parameters
@@ -426,4 +429,13 @@
        : mappedInput;
    });
  }
+ 
+ exports = {
+   ucs2decode,
+   ucs2encode,
+   decode,
+   encode,
+   toUnicode,
+   toAscii,
+ };
  
