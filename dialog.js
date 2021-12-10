@@ -269,9 +269,6 @@ function setDOMInfo(url) {
 
   fetch(cacheUrl, {
     method: "GET",
-    headers: { 
-      "Accept": "application/signed-exchange;v=b3",
-    }
   }).then(result => {
     setDisplayFields(result, 'cacheurl', 'cachecontenttype', 'cacheimg');
   })

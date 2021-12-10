@@ -5,7 +5,7 @@
   "main": "content_script.js",
   "scripts": {
     "build": "google-closure-compiler --js third_party/punycode.js --js dialog.js --js node_modules/google-closure-library/**/*.js --dependency_mode=PRUNE --entry_point=goog:dialog --js_output_file dialog_compiled.js"
-    },
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/banaag/sxg-validator.git"
