@@ -4,15 +4,15 @@
   "description": "This is the source code to the publicly available [SXG Validator](https://chrome.google.com/webstore/) Chrome extension.",
   "main": "content_script.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+    "build": "google-closure-compiler --js third_party/punycode.js --js dialog.js --js node_modules/google-closure-library/**/*.js --dependency_mode=PRUNE --entry_point=goog:dialog --js_output_file dialog_compiled.js"
+    },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/banaag/sxg-validator.git"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/banaag/sxg-validator/issues"
   },

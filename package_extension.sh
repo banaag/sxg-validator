@@ -2,6 +2,10 @@
 #
 # A script to package only the necessary files of the extension.
 
+echo "Building chrome extension"
+
+./build_extension.sh
+
 echo "Packaging chrome extension"
 
 VERSION=$(egrep "\"version\":" manifest.json | cut -d\" -f4)

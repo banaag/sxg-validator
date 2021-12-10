@@ -21,15 +21,15 @@ goog.require('goog.crypt.baseN');
 goog.require('goog.i18n.bidi');
 
 /**
- * Constructs a human readable curls encoded proxy domain using the following
- * algorithm:
+ * Constructs a human readable cache subdomain encoded proxy domain using the
+ * following algorithm:
  *   Convert domain from punycode to utf-8 (if applicable)
  *   Replace every '-' with '--'
  *   Replace every '.' with '-'
  *   Convert back to punycode (if applicable)
  *
  * @param {string} domain The publisher domain
- * @return {string} The curls encoded domain
+ * @return {string} The cache subdomain encoded domain
  * @private
  */
 function constructHumanReadableCurlsProxyDomain_(domain) {
@@ -40,9 +40,10 @@ function constructHumanReadableCurlsProxyDomain_(domain) {
 }
 
 /**
- * Constructs a curls domain following instructions at go/amp-curls-domains
+ * Constructs a cache subdomain following instructions at
+ * https://developers.google.com/search/docs/advanced/experience/signed-exchange#debug-the-google-sxg-cache
  * @param {string} domain The publisher domain
- * @return {string} The curls encoded domain
+ * @return {string} The cache subdomain encoded domain
  */
  function constructPerPublisherProxyAuthority(domain) {
   var curlsEncoding = isEligibleForHumanReadableProxyEncoding_(domain) ?
@@ -55,8 +56,7 @@ function constructHumanReadableCurlsProxyDomain_(domain) {
   }
   // Check for violations of RFC 5891
   // https://tools.ietf.org/html/rfc5891#section-4.2.3.1
-  // Punycode library will generate such URLs even though they are invalid
-  // and can cause Safari to hang: b/113606898
+  // Punycode library will generate such URLs even though they are invalid.
   if (this.hasInvalidHyphen34_(curlsEncoding)) {
     curlsEncoding = constructCurlsProxyDomainForHyphen34_(curlsEncoding);
   }
