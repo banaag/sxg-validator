@@ -29,7 +29,7 @@ goog.require('goog.i18n.bidi');
  *   Convert back to punycode (if applicable)
  *
  * @param {string} domain The publisher domain
- * @return {string} The cache subdomain encoded domain
+ * @return {string} The encoded domain
  * @private
  */
 function constructHumanReadableCurlsProxyDomain_(domain) {
@@ -43,7 +43,7 @@ function constructHumanReadableCurlsProxyDomain_(domain) {
  * Constructs a cache subdomain following instructions at
  * https://developers.google.com/search/docs/advanced/experience/signed-exchange#debug-the-google-sxg-cache
  * @param {string} domain The publisher domain
- * @return {string} The cache subdomain encoded domain
+ * @return {string} The encoded domain
  */
  function constructPerPublisherProxyAuthority(domain) {
   var curlsEncoding = isEligibleForHumanReadableProxyEncoding_(domain) ?
