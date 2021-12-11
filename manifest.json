@@ -23,7 +23,7 @@
     }
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'unsafe-inline'"
+    "extension_pages": "default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src *"
   },
   "homepage_url": "https://developers.google.com/search/docs/advanced/experience/signed-exchange",
   "permissions": [

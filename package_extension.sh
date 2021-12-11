@@ -9,6 +9,6 @@ echo "Building chrome extension"
 echo "Packaging chrome extension"
 
 VERSION=$(egrep "\"version\":" manifest.json | cut -d\" -f4)
-zip -r extension-"$VERSION".zip ./ -x package_extension.sh README.md node_modules/**\* third_party/**\*
+zip -r extension-"$VERSION".zip * -x extension-"$VERSION".zip \*.sh dialog.js package\* README.md node_modules/\* third_party/\* .git/\*
 
 echo "Done"
