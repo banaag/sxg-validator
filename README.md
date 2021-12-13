@@ -1,6 +1,7 @@
 # SXG Validator Chrome Extension
 
 This is the source code to the publicly available [SXG Validator](https://chrome.google.com/webstore/) Chrome extension.
+This is not an officially supported Google product.
 
 ## Building the extension
 
