@@ -28,8 +28,6 @@ body {
 }
 
 .debug-container {
-  display: flex;
-  flex-direction: row;
   padding-top: 15px;
   padding-bottom: 5px;
 }
@@ -62,23 +60,22 @@ body {
 <table border="1" cellpadding="3" style="border-collapse:collapse;">
   <tr>
     <td style="min-width:100px" nowrap>URL</td>
-    <td align="left"><span id="url" alt="Origin URL">The URL of the SXG's origin, cache or SXG certificate.</span></td>
+    <td align="left"><span id="url">The URL of the SXG's origin, cache or SXG certificate.</span></td>
   </tr>
   <tr>
     <td style="min-width:100px" nowrap>Content Type</td>
-    <td align="left"><span id="contenttype"
-                            alt="The content type of the origin URL">The content type of the URL.</span>
+    <td align="left"><span id="contenttype">The content type of the URL.</span>
     </td>
   </tr>
   <tr>
     <td nowrap>Warning Message</td>
-    <td align="left"><p id="cachewarning"
-                         alt="Warning message regarding cache state">Warning message from the Google Cache server indicating the state of the cache. If this is present, then it indicates an error that prevented the SXG from meeting the cache requirements.</p></td>
+    <td align="left"><p id="cachewarning">
+                     Warning message from the Google Cache server indicating the state of the cache. If this is present, then it indicates an error that prevented the SXG from meeting the cache requirements.</p></td>
   </tr>
   <tr>
     <td nowrap>Location</td>
-    <td align="left"><span id="cachelocation"
-                            alt="Location of the cache URL">The location of the URL. If this is present, then URL has not yet been fetched by the cache. This is not an error in your SXG.</span></td>
+    <td align="left"><span id="cachelocation">
+                     The location of the URL. If this is present, then URL has not yet been fetched by the cache. This is not an error in your SXG.</span></td>
   </tr>
 </table>
 <div class="debug-container">
