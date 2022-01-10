@@ -197,14 +197,12 @@ async function setCertDisplayFields(result) {
   let buffer = await result.arrayBuffer();
   var enc = new TextDecoder("utf-8");
   var s = enc.decode(buffer);
-  if (correctContentType) {
-    if (warning == null && location != null) {
-      document.getElementById('certimg').innerHTML = "⌛";
-    } else {
+  if (warning === null && location !== null) {
+    document.getElementById('certimg').innerHTML = "⌛";
+  } else if (correctContentType) {
       document.getElementById('certimg').innerHTML = "✅";
-    }
   } else {
-    document.getElementById('certimg').innerHTML = "❌";
+      document.getElementById('certimg').innerHTML = "❌";
   }
 }
 
@@ -225,14 +223,12 @@ async function setDisplayFields(result, urlFieldId, contentTypeFieldId,
   let buffer = await result.arrayBuffer();
   var enc = new TextDecoder("utf-8");
   var s = enc.decode(buffer);
-  if (correctContentType && s.startsWith('sxg1-b3\0')) {
-    if (warning == null && location != null) {
-      document.getElementById(imgFieldId).innerHTML = "⌛";
-    } else {
+  if (warning === null && location !== null) {
+    document.getElementById(imgFieldId).innerHTML = "⌛";
+  } else if (correctContentType && s.startsWith('sxg1-b3\0')) {
       document.getElementById(imgFieldId).innerHTML = "✅";
-    }
   } else {
-    document.getElementById(imgFieldId).innerHTML = "❌";
+      document.getElementById(imgFieldId).innerHTML = "❌";
   }
   let certUrl = getCertUrl(s);
 
