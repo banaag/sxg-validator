@@ -204,7 +204,11 @@ async function setCertDisplayFields(result) {
       document.getElementById('certimg').innerHTML = "✅";
     }
   } else {
-    document.getElementById('certimg').innerHTML = "❌";
+    if (warning == null && location != null) {
+      document.getElementById('certimg').innerHTML = "⌛";
+    } else {
+      document.getElementById('certimg').innerHTML = "❌";
+    }
   }
 }
 
@@ -232,7 +236,11 @@ async function setDisplayFields(result, urlFieldId, contentTypeFieldId,
       document.getElementById(imgFieldId).innerHTML = "✅";
     }
   } else {
-    document.getElementById(imgFieldId).innerHTML = "❌";
+    if (warning == null && location != null) {
+      document.getElementById(imgFieldId).innerHTML = "⌛";
+    } else {
+      document.getElementById(imgFieldId).innerHTML = "❌";
+    }
   }
   let certUrl = getCertUrl(s);
 
