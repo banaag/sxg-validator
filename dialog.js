@@ -229,6 +229,9 @@ async function setDisplayFields(result, urlFieldId, contentTypeFieldId,
       document.getElementById(imgFieldId).innerHTML = "✅";
   } else {
       document.getElementById(imgFieldId).innerHTML = "❌";
+      if (urlFieldId === "url") {
+        document.getElementById("extra-sxg-info").style.display = "none";
+      }
   }
   let certUrl = getCertUrl(s);
 
